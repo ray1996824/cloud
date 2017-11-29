@@ -1,0 +1,23 @@
+
+<html>
+<title>Search Result </title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
+<body>
+  <script>
+    function goBack() {window.history.back();}
+  </script>
+
+<div class="w3-container w3-teal">
+  <h1>Showing <%= r.length %> restaurant(s): </h1>
+</div>
+  <div class="w3-container">
+    <ol class="w3-ul w3-hoverable w3-xlarge" style="width:50%">
+      <% for (var i=0; i < r.length; i++) { %>
+        <li><a href=/display?_id=<%= r[i]._id %>><%= r[i].name %></a></li>
+      <% } %>
+    </ol>
+     <button class="w3-btn" onclick="goBack()">Go Back</button>
+  </div>
+</body>
+</html>

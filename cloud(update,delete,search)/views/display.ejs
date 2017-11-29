@@ -1,0 +1,29 @@
+
+<html>
+<title>Display </title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
+<body>
+
+  <script>
+    function goBack() {window.history.back();}
+  </script>
+<div class="w3-container w3-teal">
+  <h1>Display Restaurant </h1>
+</div>
+  <img src="data:<%= r.mimetype %>;base64, <%= r.image %>" class="w3-image w3-border w3-padding" style="width=100%">
+  <div class="w3-container">
+  <p>
+  <label class="w3-label w3-validate">Name: </label><%= r.name%></p>
+  <label class="w3-label w3-validate">Borough: </label><%= r.borough%></p>
+  <label class="w3-label w3-validate">Cuisine: </label><%= r.cuisine%></p>
+  <label class="w3-label w3-validate">Street: </label><%= r.address.street%></p>
+  <label class="w3-label w3-validate">Building: </label><%= r.address.building%></p>
+  <label class="w3-label w3-validate">Zipcode: </label><%= r.address.zipcode%></p>
+  <label class="w3-label w3-validate">GPS: </label>[<%= r.address.coord.longitude%>,<%= r.address.coord.latitude%>]</p>
+  <label class="w3-label w3-validate">Photo type: </label><%= r.mimetype %></p>
+  <button class="w3-btn" onclick="goBack()">Go Back</button>
+  </div>
+</div>
+</body>
+</html>
