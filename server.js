@@ -20,6 +20,31 @@ app.get('/new',function(req,res){
 });
 
 
+/** 
+ * 
+ *        Handle read api restaurant
+ * 
+ *  */
+app.get('/api/restaurant/read/:resfields/:condition',function(req,res,next){
+  //console.log(req.params.resfields + " " + req.params.condition);
+  var target = req.params.resfields;
+  var condition = req.params.condition;
+  MongoClient.connect(mongourl,function(err,db){
+    assert.equal(err,null);
+    console.log('Connected to MongoDB\n');
+    readDoc(db,target,condition,function(restaurants){
+        res.send(restaurants);
+        res.end();
+    });
+
+  });
+});
+
+/** 
+ * 
+ *        Handle create restaurant
+ * 
+ *  */
 app.post('/create',function(req,res){
     console.log("a new request in create:" + req.query );
 
@@ -46,6 +71,9 @@ app.post('/create',function(req,res){
             coord['longitude'] = fields.lon;
             coord['latitude'] = fields.lat;
             address['coord'] = coord;
+            grades['user'] = '';
+            grades['score'] = '';
+            restaurant['restaurant_id'] = fields.restaurant_id;
             restaurant['name'] = fields.name;
             restaurant['borough'] = fields.borough;
             restaurant['cuisine'] = fields.cuisine;
@@ -76,14 +104,15 @@ app.post('/create',function(req,res){
                restaurant['mimetype'] = mimetype;
 
               //  new_r['exif'] = exif;
-                insertPhoto(db,restaurant,function(result) {
+              insertDoc(db,restaurant,function(result) {
                   db.close();
                   if (result) {
-                    res.writeHead(200, {"Content-Type": "text/plain"});
-                    res.end('Photo was inserted into MongoDB!');
+                    //res.render('created',restaurant);
+                    res.send(restaurant);
+                    res.end('Unable to insert!');   
                   } else {
                     res.writeHead(500, {"Content-Type": "text/plain"});
-                    res.end('Photo too big! Unable to insert!');              
+                    res.end('Unable to insert!');              
                   }
                 })
               });
@@ -94,7 +123,83 @@ app.post('/create',function(req,res){
     
 });
 
-function insertPhoto(db,r,callback) {
+
+
+
+app.get('/api/restaurant/create',function(req,res){
+  console.log("a new request insert:");
+  response = {};
+      
+//  var filename = files.restaurantPhoto.path;
+ //  var mimetype = files.restaurantPhoto.type;
+ 
+  // console.log("filename = " + filename);
+  
+       var exif = {};
+        var image = {};
+        var restaurant = {};
+        var address = {};
+        var coord = {};
+        var grades = {};
+        
+        address['street'] = req.query.street;
+        address['building'] = req.query.building;
+        address['zipcode'] = req.query.zipcode;
+        coord['longitude'] = req.query.lon;
+        coord['latitude'] = req.query.lat;
+        address['coord'] = coord;
+        grades['user'] = '';
+        grades['score'] = '';
+        restaurant['restaurant_id'] = req.query.restaurant_id;
+        restaurant['name'] = req.query.name;
+        restaurant['borough'] = req.query.borough;
+        restaurant['cuisine'] = req.query.cuisine;
+        restaurant['address'] = address;
+        restaurant['owner'] = req.query.owner;
+      
+        
+        MongoClient.connect(mongourl,function(err,db) {
+          
+          // new_r['title'] = title;
+
+         //  new_r['exif'] = exif;
+         insertRestaurantAPI(db,restaurant,function(result){
+          db.close();
+          
+           if (err == null) {
+            response['status'] = 'ok'
+
+           } else {
+            response['status'] = 'failed'   
+           }
+           res.send(response);
+         });
+
+            
+         
+         });
+         
+  
+});
+
+function readDoc(db,target,condition,callback){
+  var restaurant = [];
+  var criteria = {};
+  console.log(target + " " +condition);
+  criteria[target] = condition;
+  console.log('criteria: '+ criteria);
+  cursor = db.collection('restaurants').find(criteria);
+  cursor.each(function(err,doc){
+    assert.equal(err,null);
+    if(doc != null){
+      restaurant.push(doc);
+    }else{
+      callback(restaurant);
+    }
+  });
+
+}
+function insertDoc(db,r,callback) {
     console.log('image size: ' + r.image.length);
     if (r.image.length < 14000000) {
       db.collection('restaurants').insertOne(r,function(err,result) {
@@ -107,4 +212,13 @@ function insertPhoto(db,r,callback) {
       callback(null);
     }
   }
+
+function insertRestaurantAPI(db,r,callback){
+  db.collection('restaurants').insertOne(r,function(err,result) {
+    assert.equal(err,null);
+    console.log("insert was successful!");
+    console.log(JSON.stringify(result));
+    callback(result);
+  });
+}
 app.listen(app.listen(process.env.PORT || 8099 ));
