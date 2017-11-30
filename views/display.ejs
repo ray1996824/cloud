@@ -22,7 +22,16 @@
   <label class="w3-label w3-validate">Zipcode: </label><%= r.address.zipcode%></p>
   <label class="w3-label w3-validate">GPS: </label>[<%= r.address.coord.longitude%>,<%= r.address.coord.latitude%>]</p>
   <label class="w3-label w3-validate">Photo type: </label><%= r.mimetype %></p>
-  <button class="w3-btn" onclick="goBack()">Go Back</button>
+  <a href="/rate?_id=59faa52eacda240946ae7e32&ampname=Doutor" style="text-decoration: none">
+    <button class="w3-btn w3-section w3-teal w3-ripple">Rate (comming soon)</button>
+</a>
+<a href="/update?_id=<%= r._id%>" style="text-decoration: none">
+  <button class="w3-btn w3-section w3-teal w3-ripple">Edit</button>
+</a>
+<a href="/remove?_id=<%= r._id%>" style="text-decoration: none">
+  <button class="w3-btn w3-section w3-teal w3-ripple">Delete </button>
+</a>
+<button class="w3-btn w3-section w3-teal w3-ripple" onclick="goBack()">Go Back</button>
   </div>
 </div>
 </body>

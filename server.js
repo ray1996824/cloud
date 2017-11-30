@@ -14,6 +14,23 @@ app.use(bodyParser.urlencoded({extended:true}));
 var mongourl = "mongodb://user01:123@ds259865.mlab.com:59865/comps381f"; 
 app.set('view engine','ejs');
 
+app.get('/',function(req,res){
+  console.log("a new request:")
+  MongoClient.connect(mongourl,function(err,db) {
+    assert.equal(err,null);
+    console.log('connect to MongoDB\n');
+    var search = {};
+    var criteria = 'name'
+    search[criteria] = '';
+    findRestaurant(db,search,criteria,function(restaurant) {
+      db.close();
+     // console.log(JSON.stringify(restaurant));
+      res.render("home",{r:restaurant});
+    });
+  });
+     
+  
+});
 
 
 app.get('/new',function(req,res){
@@ -35,12 +52,12 @@ app.post('/create',function(req,res){
 
         var form = new formidable.IncomingForm();
         form.parse(req, function (err, fields, files) {
-          console.log(JSON.stringify(files));
+        //  console.log(JSON.stringify(files));
           var filename = files.restaurantPhoto.path;
          // var title = (fields.name.length > 0) ? fields.name : "untitled";
           var mimetype = files.restaurantPhoto.type;
         //  console.log("title = " + title);
-          console.log("filename = " + filename);
+       //   console.log("filename = " + filename);
           //
           var exif = {};
           var image = {};
@@ -108,7 +125,7 @@ app.post('/create',function(req,res){
 
 
 function insertPhoto(db,r,callback) {
-    console.log('image size: ' + r.image.length);
+   // console.log('image size: ' + r.image.length);
     if (r.image.length < 14000000) {
       db.collection('restaurants').insertOne(r,function(err,result) {
         assert.equal(err,null);
@@ -130,7 +147,7 @@ app.get('/update',function(req,res) {
     console.log('connect to MongoDB\n');
     db.collection('restaurants').findOne(criteria,function(err,results){
       assert.equal(err,null);
-      console.log(JSON.stringify(results));
+      //console.log(JSON.stringify(results));
       res.render("record", {r:results});
 
     });
@@ -141,11 +158,11 @@ app.post('/update',function(req,res) {
   console.log("Updating");
   var form = new formidable.IncomingForm();
   form.parse(req, function (err, fields, files) {
-    console.log(JSON.stringify(files));
+    //console.log(JSON.stringify(files));
     var filename = files.restaurantPhoto.path;
     var mimetype = files.restaurantPhoto.type;
-    console.log(filename);
-    console.log(mimetype);
+   // console.log(filename);
+   // console.log(mimetype);
     var exif = {};
     var image = {};
     var restaurant = {};
@@ -269,28 +286,38 @@ app.get('/search',function(req,res) {
 
 app.post('/search',function(req,res) {
   console.log('Searching');
-  console.log(req.body.criteria);
-  console.log(req.body.value);
+ // console.log(req.body.criteria);
+  //console.log(req.body.value);
   var criteria = req.body.criteria;
   var value = req.body.value;
   var search = {};
+  //console.log(value);
   search[criteria] = value;
-  console.log(search);
+
+ // console.log(search);
   MongoClient.connect(mongourl,function(err,db) {
     assert.equal(err,null);
-    console.log('connect to MongoDB\n');
-    findRestaurant(db,search,function(restaurant) {
+   // console.log('connect to MongoDB\n');
+    findRestaurant(db,search,criteria,function(restaurant) {
       db.close();
-      console.log(JSON.stringify(restaurant));
+      //console.log(JSON.stringify(restaurant));
       res.render("searchResult",{r:restaurant});
     });
   });
 
 });
 
-function findRestaurant(db,criteria,callback) {
+function findRestaurant(db,criteria,target,callback) {
+ // console.log(target);
   var restaurant = [];
-  cursor = db.collection('restaurants').find(criteria);
+  if(criteria.target == null){
+    //console.log('value is null');
+    cursor = db.collection('restaurants').find();
+  }else{
+    //console.log('value is: ' + criteria.target);
+    cursor = db.collection('restaurants').find(criteria);
+  }
+  
   cursor.each(function(err,doc) {
     assert.equal(err,null);
     if(doc != null) {
