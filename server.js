@@ -3,6 +3,7 @@ var url = require('url');
 var fs = require('fs');
 var formidable = require('formidable');
 var MongoClient = require('mongodb').MongoClient;
+var ObjectId = require('mongodb').ObjectID;
 var assert = require('assert');
 var ObjectID = require('mongodb').ObjectID;
 var ExifImage = require('exif').ExifImage;
@@ -223,9 +224,11 @@ app.post('/update',function(req,res) {
       console.log('Preparing update: ' + JSON.stringify(newValues));
       updateRestaurant(db,criteria,newValues,function(result) {
         db.close();
-        res.render("updated",{r:newValues});
+        //res.render("updated",{r:newValues});
+        
         if(result) {
           console.log(newValues._id);
+          res.redirect('/display?_id='+newValues._id);
         }
       });
     });
@@ -385,11 +388,12 @@ app.get('/api/restaurant/create',function(req,res){
           // new_r['title'] = title;
 
          //  new_r['exif'] = exif;
-         insertRestaurantAPI(db,restaurant,function(result){
+         insertRestaurantAPI(db,restaurant,function(result,id){
           db.close();
           
            if (err == null) {
-            response['status'] = 'ok'
+            response['status'] = 'ok';
+            response['_id'] = id;
 
            } else {
             response['status'] = 'failed'   
@@ -439,8 +443,8 @@ function insertRestaurantAPI(db,r,callback){
   db.collection('restaurants').insertOne(r,function(err,result) {
     assert.equal(err,null);
     console.log("insert was successful!");
-    console.log(JSON.stringify(result));
-    callback(result);
+    console.log("inserted data:" +r._id);
+    callback(result,r._id);
   });
 }
 app.listen(app.listen(process.env.PORT || 8099 ));
