@@ -23,8 +23,18 @@
   <label class="w3-label w3-validate">GPS: </label>[<%= r.address.coord.longitude%>,<%= r.address.coord.latitude%>]</p>
   <label class="w3-label w3-validate">Photo type: </label><%= r.mimetype %></p>
   <a href="/rate?_id=59faa52eacda240946ae7e32&ampname=Doutor" style="text-decoration: none">
-    <button class="w3-btn w3-section w3-teal w3-ripple">Rate (comming soon)</button>
+    <button class="w3-btn w3-section w3-teal w3-ripple" id="ratebut">Rate</button>
 </a>
+
+<script>
+    $('#ratebut').click(function() {
+          $.ajax({
+              ratebut,
+              method: 'POST'
+          });
+   });
+</script>
+
 <a href="/update?_id=<%= r._id%>" style="text-decoration: none">
   <button class="w3-btn w3-section w3-teal w3-ripple">Edit</button>
 </a>
