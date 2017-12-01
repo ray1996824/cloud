@@ -459,7 +459,7 @@ function insertRestaurantAPI(db,r,callback){
 /*
 Rate
 */
-app.post('/rate',function(req,res) {
+app.post('ratebut',function() {
     var criteria = {
         _id : ObjectId(req.rate._id)
     };
