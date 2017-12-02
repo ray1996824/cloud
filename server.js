@@ -540,3 +540,16 @@ function userRegister(db,userid,password,callback) {
         callback(false);
     }
 }
+
+function checkRated(db,objId,userId,callback) {
+    db.collection('restaurants').findOne({
+        "_id": ObjectId(objId),
+        grades: {$elemMatch: {userid: userId}}
+    },function(err, doc) {
+        if (doc == null) {
+            callback(false);
+        } else {
+            callback(doc);
+        }
+    });
+}
