@@ -489,18 +489,47 @@ app.post('ratebut',function() {
 Register
 */
 app.get('/register',function(req,res) {
-    res.sendFile(__dirname + '/public/register.html');
+    res.render('register');
 });
 
 app.post('/register',function(req,res) {
-    MongoClient.connect(mongourl, function(err, db) {
-        assert.equal(err,null);
-        userRegister(db,req.body.username,req.body.password,function(result) {
-            db.close();
-            console.log('Disconnected MongoDB\n');
-            res.redirect('/');
+    var username = req.body.username;
+    var password = req.body.password;
+    var userData = {username: username, password: password}; 
+
+    if(username == '' || password == ''){
+        res.json({
+            'message':'Password or Account can not be null'
         });
-    });
+        return;
+    }
+    var db = mongoose.createConnection('mongodb://user01:123@ds259865.mlab.com:59865/comps381f');
+        var Schema = new mongoose.Schema({
+            username: String,
+            password: String
+        });
+        var User = db.model('user',Schema);
+        User.findOne({username: username},function (err, data) {
+            if(err){
+                res.send(err);
+            }
+            if(data){
+                res.send('<p>Account already exists</p>');
+                return;
+            }
+            User.create(userData,function (err, data, affectNums) {
+                if(err){
+                    res.json({
+                        message: err
+                    });
+                    return;
+                }
+                if(affectNums == 0){
+                    res.send('<p> Register Error </p>');
+                    return;
+                }
+            });
+        });
 });
 
 /*
