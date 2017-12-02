@@ -519,3 +519,24 @@ app.get('/logout',function(req,res) {
 });
 
 app.listen(app.listen(process.env.PORT || 8099 ));
+
+function userRegister(db,userid,password,callback) {
+    console.log("Creating new user");
+    user = db.collection('user').findOne({username:username},{userid:1});
+
+    if(!user) {
+        db.collection('user').insert(
+            {
+                username: username,
+                password: password
+            }, function(err, result) {
+                assert.equal(err, null);
+                console.log("Inserted a user into the users collection.");
+                callback(true);
+            }
+        )
+    }else{
+        console.log("Cannot create a new user.");
+        callback(false);
+    }
+}
