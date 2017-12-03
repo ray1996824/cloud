@@ -171,8 +171,13 @@ app.get('/update',function(req,res) {
     console.log('connect to MongoDB\n');
     db.collection('restaurants').findOne(criteria,function(err,results){
       assert.equal(err,null);
-      //console.log(JSON.stringify(results));
+      console.log(JSON.stringify(results));
+      if(results.owner == req.session.username)
       res.render("record", {r:results});
+      else{
+        res.render('error',{e: {msg:'You are not authorized to edit!'}});
+      }
+
 
     });
   }); 
@@ -324,12 +329,23 @@ app.get('/remove',function(req,res) {
   MongoClient.connect(mongourl,function(err,db) {
     assert.equal(err,null);
     console.log('connect to MongoDB\n');
-    deleteRestaurant(db,criteria,function(result) {
-      db.close();
-      console.log(JSON.stringify(result));
+    
+    db.collection('restaurants').findOne(criteria,function(err,results){
+      assert.equal(err,null);
+      console.log(JSON.stringify(results));
+      if(results.owner != req.session.username)
+        res.render('error',{e: {msg:'You are not authorized to delete!'}});
+        else{
+          deleteRestaurant(db,criteria,function(result) {
+            db.close();
+            console.log(JSON.stringify(result));
+          });
+          res.render("remove", {});
+        }
     });
-    res.render("remove", {});
-  }); 
+
+  /**   **/
+  });
 });
 
 function deleteRestaurant(db,criteria,callback) {
@@ -558,19 +574,27 @@ app.post('/register',function(req,res) {
   user['password'] = fields.password;
     MongoClient.connect(mongourl, function(err, db) {
         assert.equal(err,null);
-        userRegister(db,user,function(result) {
-            db.close();
-            console.log('Disconnected MongoDB\n');
-            if(result)
+        var authorset = {};
+        
+        db.collection('user').findOne(user,function(err,results){
+          assert.equal(err,null);
+          console.log(JSON.stringify(user));
+          console.log(JSON.stringify(results));
+          if(results == null){
+           
+            userRegister(db,user,function(result) {
+                db.close();
+                console.log('Disconnected MongoDB\n');
+                res.redirect('/login');
+            });
+          }
 
-              res.redirect('/login');
-            
-            else{
-              res.status(500).send('username always exist');
-              res.end();
-            }
-            
+          else{
+            res.render('error',{e: {msg:'username always exist'}});
+          }
+
         });
+   
     });
   });
 });
@@ -605,14 +629,15 @@ app.post('/login',function(req,res) {
           }
           
           else{
-            res.status(500).send('wrong username or password');
-            res.end();
+            res.render('error',{e: {msg:'wrong username or password'}});
           }
           
       });
   });
   });
 });
+
+
 
 function userLogin(db,user,callback) {
   console.log("Login");
@@ -650,19 +675,6 @@ function userRegister(db,user,callback) {
         console.log("Cannot create a new user.");
         callback(false);
     }**/
-}
-
-function checkRated(db,objId,userId,callback) {
-    db.collection('restaurants').findOne({
-        "_id": ObjectId(objId),
-        grades: {$elemMatch: {userid: userId}}
-    },function(err, doc) {
-        if (doc == null) {
-            callback(false);
-        } else {
-            callback(doc);
-        }
-    });
 }
 
 
