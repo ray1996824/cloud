@@ -566,7 +566,38 @@ function readDoc(db,target,condition,callback){
   console.log(target + " " +condition);
   criteria[target] = condition;
   console.log('criteria: '+ criteria);
-  cursor = db.collection('restaurants').find(criteria);
+  //cursor = db.collection('restaurants').find(criteria);
+  if(target == null){
+    console.log('value is null');
+    cursor = db.collection('restaurants').find();
+  }else{
+    switch(target){
+      case 'restaurant_id':case 'name': case 'borough':case 'cuisine':case 'owner':
+        console.log(JSON.stringify(criteria));
+        cursor = db.collection('restaurants').find(criteria);
+        break;
+      case 'street':
+        cursor = db.collection('restaurants').find({'address.street': value});
+        //console.log(JSON.stringify(cursor));
+        break;
+      case 'building':
+        cursor = db.collection('restaurants').find({'address.building': value});
+        break;
+      case 'zipcode':
+        cursor = db.collection('restaurants').find({'address.zipcode': value});
+        break;
+      case 'longitude':
+        cursor = db.collection('restaurants').find({'address.coord.longitude': value});
+        break;
+      case 'latitude':
+        cursor = db.collection('restaurants').find({'address.coord.latitude': value});
+        break;
+      case 'score':
+        cursor = db.collection('restaurants').find({'address.grades.score': value});
+        break;       
+    }
+  }
+  
   cursor.each(function(err,doc){
     assert.equal(err,null);
     if(doc != null){
