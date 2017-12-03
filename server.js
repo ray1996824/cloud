@@ -433,8 +433,17 @@ function findRestaurant(db,criteria,target,callback) {
     console.log('value is null');
     cursor = db.collection('restaurants').find();
   }else{
-    console.log(JSON.stringify(criteria));
-    cursor = db.collection('restaurants').find(criteria);
+    switch(target){
+      case 'id':case 'name': case 'borough':case 'cuisine':case 'owner':
+      console.log(JSON.stringify(criteria));
+      cursor = db.collection('restaurants').find(criteria);
+      break;
+      case 'street':case 'building':case 'zipcode':case 'coord':
+      cursor = db.collection('restaurants').find({'address': criteria});
+      console.log(JSON.stringify({'address': criteria}));
+      break;
+    }
+    
   }
   
   cursor.each(function(err,doc) {
