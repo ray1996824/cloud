@@ -1,0 +1,11 @@
+{
+"name": "Mys381f",
+"description": "A very simple Node.js app",
+"author": "Raymond SO <rso@ouhk.edu.hk>",
+"version": "1.0.0",
+"dependencies": {},
+"engine": "node >= 0.10.0",
+"scripts": {
+"start": "node server"
+}
+}

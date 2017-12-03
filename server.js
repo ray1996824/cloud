@@ -37,8 +37,9 @@ app.get('/',function(req,res){
     console.log('connect to MongoDB\n');
     var search = {};
     var criteria = null;
+    var value = null;
     search[criteria] = '';
-    findRestaurant(db,search,criteria,function(restaurant) {
+    findRestaurant(db,value,search,criteria,function(restaurant) {
       db.close();
       restaurant['owner'] = req.session.username;
      // console.log(JSON.stringify(restaurant));
@@ -394,13 +395,21 @@ app.post('/search',function(req,res) {
   var criteria = fields.criteria;
   var value = fields.value;
   var search = {};
-  //console.log(value);
+  var address = {};
+  var coord = {};
+  console.log(value);
   search[criteria] = value;
+
+  /*if (criteria == 'street') {
+    search['address'] = address;
+    address[criteria] = value;
+    console.log(search);
+  }*/
 
   MongoClient.connect(mongourl,function(err,db) {
     assert.equal(err,null);
    // console.log('connect to MongoDB\n');
-    findRestaurant(db,search,criteria,function(restaurant) {
+    findRestaurant(db,value,search,criteria,function(restaurant) {
       db.close();
       //console.log(JSON.stringify(restaurant));
       res.render("searchResult",{r:restaurant});
@@ -426,22 +435,39 @@ app.get('/rate',function(req,res) {
 
 
 
-function findRestaurant(db,criteria,target,callback) {
+function findRestaurant(db,value,criteria,target,callback) {
   console.log(target);
+  console.log(criteria);
   var restaurant = [];
+  //cursor = db.collection('restaurants').find(criteria);
   if(target == null){
     console.log('value is null');
     cursor = db.collection('restaurants').find();
   }else{
     switch(target){
-      case 'id':case 'name': case 'borough':case 'cuisine':case 'owner':
-      console.log(JSON.stringify(criteria));
-      cursor = db.collection('restaurants').find(criteria);
-      break;
-      case 'street':case 'building':case 'zipcode':case 'coord':
-      cursor = db.collection('restaurants').find({'address': criteria});
-      console.log(JSON.stringify({'address': criteria}));
-      break;
+      case 'restaurant_id':case 'name': case 'borough':case 'cuisine':case 'owner':
+        console.log(JSON.stringify(criteria));
+        cursor = db.collection('restaurants').find(criteria);
+        break;
+      case 'street':
+        cursor = db.collection('restaurants').find({'address.street': value});
+        //console.log(JSON.stringify(cursor));
+        break;
+      case 'building':
+        cursor = db.collection('restaurants').find({'address.building': value});
+        break;
+      case 'zipcode':
+        cursor = db.collection('restaurants').find({'address.zipcode': value});
+        break;
+      case 'longitude':
+        cursor = db.collection('restaurants').find({'address.coord.longitude': value});
+        break;
+      case 'latitude':
+        cursor = db.collection('restaurants').find({'address.coord.latitude': value});
+        break;
+      case 'score':
+        cursor = db.collection('restaurants').find({'address.grades.score': value});
+        break;       
     }
     
   }
