@@ -1,0 +1,29 @@
+{
+  "name": "comp381fres",
+  "description": "A very simple Node.js app",
+  "author": "Raymond <kitsons054002@yahoo.com.hk>",
+  "version": "1.0.0",
+  "dependencies": {
+    "assert": "^1.4.1",
+    "cookie-session": "^2.0.0-beta.3",
+    "ejs": "^2.5.7",
+    "exif": "^0.6.0",
+    "express": "^4.16.2",
+    "formidable": "^1.1.1",
+    "mongodb": "^2.2.33"
+  },
+  "engine": "node >= 0.10.0",
+  "scripts": {
+    "start": "node server"
+  },
+  "main": "login_out_register.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ray1996824/cloud.git"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ray1996824/cloud/issues"
+  },
+  "homepage": "https://github.com/ray1996824/cloud#readme"
+}

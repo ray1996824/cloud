@@ -42,6 +42,7 @@ app.get('/',function(req,res){
       db.close();
       restaurant['owner'] = req.session.username;
      // console.log(JSON.stringify(restaurant));
+
       res.render("home",{r:restaurant});
     });
   });
@@ -54,9 +55,8 @@ app.get('/new',function(req,res){
   if(req.session.username == null)
   res.redirect('login');
   console.log("a new request:")
- 
-      res.render('new',{});
-  
+  res.render('new',{});
+  return;
 });
 
 
@@ -76,9 +76,9 @@ app.post('/create',function(req,res){
         var form = new formidable.IncomingForm();
         form.parse(req, function (err, fields, files) {
         //  console.log(JSON.stringify(files));
-          var filename = files.restaurantPhoto.path;
+      
          // var title = (fields.name.length > 0) ? fields.name : "untitled";
-          var mimetype = files.restaurantPhoto.type;
+          
         //  console.log("title = " + title);
        //   console.log("filename = " + filename);
           //
@@ -104,6 +104,9 @@ app.post('/create',function(req,res){
           restaurant['address'] = address;
           restaurant['owner'] = req.session.username;
           restaurant['grades'] = grades_array;
+
+
+          var mimetype = files.restaurantPhoto.type;
           image['image'] = filename;
   
           try {
@@ -370,6 +373,7 @@ app.get('/display',function(req,res) {
     db.collection('restaurants').findOne(criteria,function(err,results){
       assert.equal(err,null);
       //console.log(JSON.stringify(results));
+      results['username'] = req.session.username;
       res.render("display", {r:results});
 
     });
@@ -491,7 +495,7 @@ app.get('/api/restaurant/create',function(req,res){
         var restaurant = {};
         var address = {};
         var coord = {};
-        var grades = {};
+        var grades = [];
         
         address['street'] = req.query.street;
         address['building'] = req.query.building;
@@ -501,13 +505,13 @@ app.get('/api/restaurant/create',function(req,res){
         address['coord'] = coord;
         grades['user'] = '';
         grades['score'] = '';
-        restaurant['restaurant_id'] = req.query.rid;
+        restaurant['restaurant_id'] = req.query.restaurant_id;
         restaurant['name'] = req.query.name;
         restaurant['borough'] = req.query.borough;
         restaurant['cuisine'] = req.query.cuisine;
         restaurant['address'] = address;
         restaurant['owner'] = req.query.owner;
-      
+        restaurant['grades'] = grades;
         
         MongoClient.connect(mongourl,function(err,db) {
           
@@ -620,6 +624,7 @@ Login
  
 app.get('/login',function(req,res) {
    res.render("login",{});
+   return;
 });
 
 app.post('/login',function(req,res) {
