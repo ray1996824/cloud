@@ -36,7 +36,7 @@ app.get('/',function(req,res){
     assert.equal(err,null);
     console.log('connect to MongoDB\n');
     var search = {};
-    var criteria = 'name'
+    var criteria = null;
     search[criteria] = '';
     findRestaurant(db,search,criteria,function(restaurant) {
       db.close();
@@ -387,15 +387,16 @@ app.post('/search',function(req,res) {
   if(req.session.username == null)
   res.redirect('login');
   console.log('Searching');
+  var form = new formidable.IncomingForm();
+  form.parse(req,function(err,fields,files) {
  // console.log(req.body.criteria);
   //console.log(req.body.value);
-  var criteria = req.body.criteria;
-  var value = req.body.value;
+  var criteria = fields.criteria;
+  var value = fields.value;
   var search = {};
   //console.log(value);
   search[criteria] = value;
 
- // console.log(search);
   MongoClient.connect(mongourl,function(err,db) {
     assert.equal(err,null);
    // console.log('connect to MongoDB\n');
@@ -405,6 +406,9 @@ app.post('/search',function(req,res) {
       res.render("searchResult",{r:restaurant});
     });
   });
+
+  });
+
 
 });
 
@@ -423,13 +427,13 @@ app.get('/rate',function(req,res) {
 
 
 function findRestaurant(db,criteria,target,callback) {
- // console.log(target);
+  console.log(target);
   var restaurant = [];
-  if(criteria.target == null){
-    //console.log('value is null');
+  if(target == null){
+    console.log('value is null');
     cursor = db.collection('restaurants').find();
   }else{
-    //console.log('value is: ' + criteria.target);
+    console.log(JSON.stringify(criteria));
     cursor = db.collection('restaurants').find(criteria);
   }
   
@@ -614,19 +618,17 @@ app.post('/login',function(req,res) {
   var form = new formidable.IncomingForm();
   form.parse(req, function (err, fields, files) {
     var user = {};
-    var record = {};
     user['username']  = fields.username;
     user['password']  = fields.password;
-    record['user'] = user;
     MongoClient.connect(mongourl, function(err, db) {
       assert.equal(err,null);
      
-      userLogin(db,record,function(result) {
+      userLogin(db,user,function(result) {
           db.close();
           
           if(result != null){
-            console.log('login with ' + result.user.username);
-              req.session.username = result.user.username;
+            console.log('login with ' + result.username);
+              req.session.username = result.username;
               res.redirect('/');
           }
           
@@ -639,6 +641,16 @@ app.post('/login',function(req,res) {
   });
 });
 
+app.get("/map", function(req,res) {
+	res.render("gmap", {
+    name: req.query.rname,
+		lat:req.query.lat,
+		lon:req.query.lon,
+    zoom:req.query.zoom
+    
+	});
+	res.end();
+});
 
 
 function userLogin(db,user,callback) {
@@ -665,9 +677,8 @@ function userRegister(db,user,callback) {
 
     //if(!user) {
         db.collection('user').insert(
-            {
               user
-            }, function(err, result) {
+            , function(err, result) {
                 assert.equal(err, null);
                 console.log("Inserted a user into the users collection.");
                 callback(true);

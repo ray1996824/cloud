@@ -42,8 +42,9 @@
   <p>
 <label class="w3-label w3-validate">Created by: </label><%= r.owner%></p>
 
-
-
+  <a href="/map?lat=<%= r.address.coord.latitude%>&lon=<%= r.address.coord.longitude%>&zoom=15&rname=<%= r.name%>" style="text-decoration: none">
+   <p> Google Map </p>
+  </a>
   <a href="/rate?_id=<%= r._id%>&user=username" style="text-decoration: none">
     <button class="w3-btn w3-section w3-teal w3-ripple">Rate</button>
   </a>
