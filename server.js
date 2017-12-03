@@ -501,6 +501,7 @@ function insertRestaurantAPI(db,r,callback){
 
 
 app.get('/register',function(req,res) {
+<<<<<<< HEAD
    res.render('register',{});
 });
 
@@ -525,6 +526,49 @@ app.post('/register',function(req,res) {
         });
     });
   });
+=======
+    res.render('register');
+});
+
+app.post('/register',function(req,res) {
+    var username = req.body.username;
+    var password = req.body.password;
+    var userData = {username: username, password: password}; 
+
+    if(username == '' || password == ''){
+        res.json({
+            'message':'Password or Account can not be null'
+        });
+        return;
+    }
+    var db = mongoose.createConnection('mongodb://user01:123@ds259865.mlab.com:59865/comps381f');
+        var Schema = new mongoose.Schema({
+            username: String,
+            password: String
+        });
+        var User = db.model('user',Schema);
+        User.findOne({username: username},function (err, data) {
+            if(err){
+                res.send(err);
+            }
+            if(data){
+                res.send('<p>Account already exists</p>');
+                return;
+            }
+            User.create(userData,function (err, data, affectNums) {
+                if(err){
+                    res.json({
+                        message: err
+                    });
+                    return;
+                }
+                if(affectNums == 0){
+                    res.send('<p> Register Error </p>');
+                    return;
+                }
+            });
+        });
+>>>>>>> 8495a9b5f418632ece8f2dfe84987425fa9f0588
 });
 
 /*
