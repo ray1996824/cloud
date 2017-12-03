@@ -88,20 +88,22 @@ app.post('/create',function(req,res){
           var address = {};
           var coord = {};
           var grades = {};
+          var grades_array = [];
           address['street'] = fields.street;
           address['building'] = fields.building;
           address['zipcode'] = fields.zipcode;
           coord['longitude'] = fields.lon;
           coord['latitude'] = fields.lat;
           address['coord'] = coord;
-          grades['user'] = '';
-          grades['score'] = '';
+          grades['user'] = null;
+          grades['score'] = null;
           restaurant['restaurant_id'] = fields.rid;
           restaurant['name'] = fields.name;
           restaurant['borough'] = fields.borough;
           restaurant['cuisine'] = fields.cuisine;
           restaurant['address'] = address;
           restaurant['owner'] = req.session.username;
+          restaurant['grades'] = grades_array;
           image['image'] = filename;
   
           try {
