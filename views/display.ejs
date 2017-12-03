@@ -14,6 +14,7 @@
   <img src="data:<%= r.mimetype %>;base64, <%= r.image %>" class="w3-image w3-border w3-padding" style="width=100%">
   <div class="w3-container">
   <p>
+      <label class="w3-label w3-validate">Restaurant ID: </label><%= r.restaurant_id%></p>
   <label class="w3-label w3-validate">Name: </label><%= r.name%></p>
   <label class="w3-label w3-validate">Borough: </label><%= r.borough%></p>
   <label class="w3-label w3-validate">Cuisine: </label><%= r.cuisine%></p>
@@ -22,19 +23,11 @@
   <label class="w3-label w3-validate">Zipcode: </label><%= r.address.zipcode%></p>
   <label class="w3-label w3-validate">GPS: </label>[<%= r.address.coord.longitude%>,<%= r.address.coord.latitude%>]</p>
   <label class="w3-label w3-validate">Photo type: </label><%= r.mimetype %></p>
-  <a href="/rate?_id=59faa52eacda240946ae7e32&ampname=Doutor" style="text-decoration: none">
-    <button class="w3-btn w3-section w3-teal w3-ripple" id="ratebut">Rate</button>
-</a>
 
-<script>
-    $('#ratebut').click(function() {
-          $.ajax({
-              ratebut,
-              method: 'POST'
-          });
-   });
-</script>
 
+  <a href="/rate?_id=<%= r._id%>&user=username" style="text-decoration: none">
+    <button class="w3-btn w3-section w3-teal w3-ripple">Rate</button>
+  </a>
 <a href="/update?_id=<%= r._id%>" style="text-decoration: none">
   <button class="w3-btn w3-section w3-teal w3-ripple">Edit</button>
 </a>

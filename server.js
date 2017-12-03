@@ -9,12 +9,19 @@ var ObjectID = require('mongodb').ObjectID;
 var ExifImage = require('exif').ExifImage;
 var express = require('express');
 var app = express();
-var bodyParser = require('body-parser');
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended:true}));
+var session = require('cookie-session');
+//var bodyParser = require('body-parser');
+//app.use(bodyParser.json());
+//app.use(bodyParser.urlencoded({extended:false}));
 var mongourl = "mongodb://user01:123@ds259865.mlab.com:59865/comps381f"; 
 app.set('view engine','ejs');
-
+/*
+Session
+*/
+app.use(session({
+  name: 'session',
+  keys: ['user','password']
+}));
 app.get('/',function(req,res){
   console.log("a new request:")
   MongoClient.connect(mongourl,function(err,db) {
@@ -41,12 +48,7 @@ app.get('/new',function(req,res){
   
 });
 
-/*
-Session
-*/
-app.use(session({
-    name: 'session',
-}));
+
 
 /** 
 * 
@@ -81,7 +83,7 @@ app.post('/create',function(req,res){
           address['coord'] = coord;
           grades['user'] = '';
           grades['score'] = '';
-          restaurant['restaurant_id'] = fields.restaurant_id;
+          restaurant['restaurant_id'] = fields.rid;
           restaurant['name'] = fields.name;
           restaurant['borough'] = fields.borough;
           restaurant['cuisine'] = fields.cuisine;
@@ -116,8 +118,7 @@ app.post('/create',function(req,res){
                 db.close();
                 if (result) {
                   //res.render('created',restaurant);
-                  res.send(restaurant);
-                  res.end('Unable to insert!');   
+                 res.redirect('/');
                 } else {
                   res.writeHead(500, {"Content-Type": "text/plain"});
                   res.end('Unable to insert!');              
@@ -232,7 +233,6 @@ app.post('/update',function(req,res) {
       updateRestaurant(db,criteria,newValues,function(result) {
         db.close();
         //res.render("updated",{r:newValues});
-        
         if(result) {
           console.log(newValues._id);
           res.redirect('/display?_id='+newValues._id);
@@ -243,6 +243,31 @@ app.post('/update',function(req,res) {
 });
 });
 
+app.post('/rate',function(req,res) {
+  var criteria = {};
+
+  var form = new formidable.IncomingForm();
+  form.parse(req,function(err,fields,files) {
+    criteria['_id'] = ObjectID(fields._id);
+    var grades = {};
+    var restaurant = {};
+    grades['user'] = fields.user;
+    grades['score'] = fields.score;
+    restaurant['grades'] = grades;
+    MongoClient.connect(mongourl,function(err,db) {
+      assert.equal(err,null);
+      console.log(JSON.stringify(criteria) + JSON.stringify(restaurant));
+      updateRestaurantScore(db,criteria,restaurant,function(restaurant) {
+        db.close();
+        //console.log(JSON.stringify(restaurant));
+        res.redirect('/display?_id='+fields._id);
+      });
+    });
+
+  });
+});
+
+
 function updateRestaurant(db,criteria,newValues,callback) {
   db.collection('restaurants').updateOne(criteria,{$set:newValues},function(err,result){
     assert.equal(err,null);
@@ -250,7 +275,13 @@ function updateRestaurant(db,criteria,newValues,callback) {
     callback(result);
   });
 }
-
+function updateRestaurantScore(db,criteria,newValues,callback) {
+  db.collection('restaurants').updateOne(criteria,{$push:newValues},function(err,result){
+    assert.equal(err,null);
+    console.log("update was successfully");
+    callback(result);
+  });
+}
 app.get('/remove',function(req,res) {
   var criteria = {};
   criteria['_id'] = ObjectID(req.query._id);
@@ -282,7 +313,7 @@ app.get('/display',function(req,res) {
     console.log('connect to MongoDB\n');
     db.collection('restaurants').findOne(criteria,function(err,results){
       assert.equal(err,null);
-      console.log(JSON.stringify(results));
+      //console.log(JSON.stringify(results));
       res.render("display", {r:results});
 
     });
@@ -316,6 +347,18 @@ app.post('/search',function(req,res) {
   });
 
 });
+
+/*
+Rate
+*/
+app.get('/rate',function(req,res) {
+  var criteria = {};
+  criteria['_id'] = req.query._id;
+  criteria['user'] = req.query.user;
+  res.render("rate",{c:criteria});
+});
+
+
 
 function findRestaurant(db,criteria,target,callback) {
  // console.log(target);
@@ -382,7 +425,7 @@ app.get('/api/restaurant/create',function(req,res){
         address['coord'] = coord;
         grades['user'] = '';
         grades['score'] = '';
-        restaurant['restaurant_id'] = req.query.restaurant_id;
+        restaurant['restaurant_id'] = req.query.rid;
         restaurant['name'] = req.query.name;
         restaurant['borough'] = req.query.borough;
         restaurant['cuisine'] = req.query.cuisine;
@@ -456,89 +499,83 @@ function insertRestaurantAPI(db,r,callback){
 }
 
 
-/*
-Rate
-*/
-app.post('ratebut',function() {
-    var criteria = {
-        _id : ObjectId(req.rate._id)
-    };
-    console.log('Delete' + JSON.stringify(criteria));
-    MongoClient.connect(mongourl,function(err,db) {
-        assert.equal(err,null);
-        db.collection('restaurants').update(
-            { _id: ObjectId(req.rate._id) },
-            { $push:
-                { grades:
-                    {
-                        username:req.session.username,
-                        score:req.rate.score
-                    }
-                }
-            },function(err,result) {
-                assert.equal(err, null);
-                console.log("Rated");
-                res.redirect('/display?_id='+req.rate._id);
-            }
 
-        )
-    });
-});
-
-/*
-Register
-*/
 app.get('/register',function(req,res) {
-    res.sendFile(__dirname + '/public/register.html');
+   res.render('register',{});
 });
 
-app.post('/register',function(req,res) {
+app.post('/register',function(req,res) { 
+   var form = new formidable.IncomingForm();
+  form.parse(req,function(err,fields,files) {
+  user = {};
+  user['username'] = fields.username;
+  user['password'] = fields.password;
     MongoClient.connect(mongourl, function(err, db) {
         assert.equal(err,null);
-        userRegister(db,req.body.username,req.body.password,function(result) {
+        userRegister(db,user,function(result) {
             db.close();
             console.log('Disconnected MongoDB\n');
-            res.redirect('/');
+            if(result)
+            res.redirect('/login');
+            else{
+              res.status(500).send('username always exist');
+              res.end();
+            }
+            
         });
     });
+  });
 });
 
 /*
 Login
 */
+ 
 app.get('/login',function(req,res) {
-    res.sendFile(__dirname + '/public/login.html');
+   res.render("login",{});
 });
 
-/*
-Logout
-*/
+app.post('/login',function(req,res) {
+  console.log('login request incoming with: '+ req.url+ req.method);
+  var form = new formidable.IncomingForm();
+  form.parse(req, function (err, fields, files) {
+    /**var user = {};
+    user['username']  = fields.username;
+    user['password']  = fields.password;
+    console.log(user);*/
+    console.log(fields.username);
+    console.log(fields.password);
+    res.writeHead(200, {'content-type': 'text/plain'});
+    res.write('received upload:\n\n');
+    res.end();
+  });
+});
+
 app.get('/logout',function(req,res) {
     req.session = null;
     res.redirect('/');
 });
 
-app.listen(app.listen(process.env.PORT || 8099 ));
 
-function userRegister(db,userid,password,callback) {
+
+function userRegister(db,user,callback) {
     console.log("Creating new user");
-    user = db.collection('user').findOne({username:username},{userid:1});
+  //  user = db.collection('user').findOne({username:username},{userid:1});
 
-    if(!user) {
+    //if(!user) {
         db.collection('user').insert(
             {
-                username: username,
-                password: password
+              user
             }, function(err, result) {
                 assert.equal(err, null);
                 console.log("Inserted a user into the users collection.");
                 callback(true);
             }
         )
-    }else{
+  /**  }else{
         console.log("Cannot create a new user.");
         callback(false);
-    }
+    }**/
 }
 
 function checkRated(db,objId,userId,callback) {
@@ -553,3 +590,6 @@ function checkRated(db,objId,userId,callback) {
         }
     });
 }
+
+
+app.listen(app.listen(process.env.PORT || 8099 ));
