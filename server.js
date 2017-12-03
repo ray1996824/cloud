@@ -13,7 +13,7 @@ var session = require('cookie-session');
 //var bodyParser = require('body-parser');
 //app.use(bodyParser.json());
 //app.use(bodyParser.urlencoded({extended:false}));
-app.use("/styles",express.static(__dirname + "/styles"));
+
 var mongourl = "mongodb://user01:123@ds259865.mlab.com:59865/comps381f"; 
 app.set('view engine','ejs');
 
@@ -107,7 +107,7 @@ app.post('/create',function(req,res){
           restaurant['address'] = address;
           restaurant['owner'] = req.session.username;
           restaurant['grades'] = grades_array;
-
+          var filename = files.restaurantPhoto.path;
 
           var mimetype = files.restaurantPhoto.type;
           image['image'] = filename;
