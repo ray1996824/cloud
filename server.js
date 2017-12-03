@@ -18,12 +18,20 @@ app.set('view engine','ejs');
 /*
 Session
 */
+var expiryDate = new Date( Date.now() + 60 * 60 * 1000 ); // 1 hour
 app.use(session({
   name: 'session',
-  keys: ['user','password']
-}));
+  keys: ['key1', 'key2'],
+  cookie: { secure: true,
+            httpOnly: true,
+            expires: expiryDate
+          }
+  })
+);
+
 app.get('/',function(req,res){
-  console.log("a new request:")
+  if(req.session.username == null)
+    res.redirect('login');
   MongoClient.connect(mongourl,function(err,db) {
     assert.equal(err,null);
     console.log('connect to MongoDB\n');
@@ -32,6 +40,7 @@ app.get('/',function(req,res){
     search[criteria] = '';
     findRestaurant(db,search,criteria,function(restaurant) {
       db.close();
+      restaurant['owner'] = req.session.username;
      // console.log(JSON.stringify(restaurant));
       res.render("home",{r:restaurant});
     });
@@ -42,6 +51,8 @@ app.get('/',function(req,res){
 
 
 app.get('/new',function(req,res){
+  if(req.session.username == null)
+  res.redirect('login');
   console.log("a new request:")
  
       res.render('new',{});
@@ -56,6 +67,8 @@ app.get('/new',function(req,res){
 * 
 *  */
 app.post('/create',function(req,res){
+  if(req.session.username == null)
+  res.redirect('login');
   console.log("a new request in create:" + req.query );
 
   var queryAsObject = req.query ; 
@@ -88,7 +101,7 @@ app.post('/create',function(req,res){
           restaurant['borough'] = fields.borough;
           restaurant['cuisine'] = fields.cuisine;
           restaurant['address'] = address;
-          restaurant['owner'] = fields.owner;
+          restaurant['owner'] = req.session.username;
           image['image'] = filename;
   
           try {
@@ -149,6 +162,8 @@ function insertPhoto(db,r,callback) {
 
 
 app.get('/update',function(req,res) {
+  if(req.session.username == null)
+  res.redirect('login');
   var criteria = {};
   criteria['_id'] = ObjectID(req.query._id);
   MongoClient.connect(mongourl,function(err,db) {
@@ -164,6 +179,8 @@ app.get('/update',function(req,res) {
 });
 
 app.post('/update',function(req,res) {
+  if(req.session.username == null)
+  res.redirect('login');
   console.log("Updating");
   var form = new formidable.IncomingForm();
   form.parse(req, function (err, fields, files) {
@@ -244,6 +261,8 @@ app.post('/update',function(req,res) {
 });
 
 app.post('/rate',function(req,res) {
+  if(req.session.username == null)
+  res.redirect('login');
   var criteria = {};
 
   var form = new formidable.IncomingForm();
@@ -259,8 +278,13 @@ app.post('/rate',function(req,res) {
       console.log(JSON.stringify(criteria) + JSON.stringify(restaurant));
       updateRestaurantScore(db,criteria,restaurant,function(restaurant) {
         db.close();
+        if(restaurant == null)
+        res.render('error',{e: {msg:'You have rated this restaurant'}});
+        else{
+          res.redirect('/display?_id='+fields._id);
+        }
         //console.log(JSON.stringify(restaurant));
-        res.redirect('/display?_id='+fields._id);
+       
       });
     });
 
@@ -276,13 +300,25 @@ function updateRestaurant(db,criteria,newValues,callback) {
   });
 }
 function updateRestaurantScore(db,criteria,newValues,callback) {
-  db.collection('restaurants').updateOne(criteria,{$push:newValues},function(err,result){
-    assert.equal(err,null);
-    console.log("update was successfully");
-    callback(result);
+  
+  db.collection('restaurants').findOne({"grades" : {$elemMatch: { "user": newValues.grades.user}}}, function(err,result) {
+    if(result!=null){
+      callback(null);
+    }
+    else{
+      db.collection('restaurants').updateOne(criteria,{$push:newValues},function(err,result){
+        assert.equal(err,null);
+        console.log("update was successfully");
+        callback(result);
+      });
+    }
   });
+
 }
+
 app.get('/remove',function(req,res) {
+  if(req.session.username == null)
+  res.redirect('login');
   var criteria = {};
   criteria['_id'] = ObjectID(req.query._id);
   MongoClient.connect(mongourl,function(err,db) {
@@ -305,6 +341,8 @@ function deleteRestaurant(db,criteria,callback) {
 }
 
 app.get('/display',function(req,res) {
+  if(req.session.username == null)
+  res.redirect('login');
   console.log('a display reqeust');
   var criteria = {};
   criteria['_id'] = ObjectID(req.query._id);
@@ -321,11 +359,15 @@ app.get('/display',function(req,res) {
 });
 
 app.get('/search',function(req,res) {
+  if(req.session.username == null)
+  res.redirect('login');
   console.log('a search reqeust');
    res.render("search", {});
 });
 
 app.post('/search',function(req,res) {
+  if(req.session.username == null)
+  res.redirect('login');
   console.log('Searching');
  // console.log(req.body.criteria);
   //console.log(req.body.value);
@@ -352,6 +394,8 @@ app.post('/search',function(req,res) {
 Rate
 */
 app.get('/rate',function(req,res) {
+  if(req.session.username == null)
+  res.redirect('login');
   var criteria = {};
   criteria['_id'] = req.query._id;
   criteria['user'] = req.query.user;
@@ -387,6 +431,7 @@ function findRestaurant(db,criteria,target,callback) {
  * 
  *  */
 app.get('/api/restaurant/read/:resfields/:condition',function(req,res,next){
+
   //console.log(req.params.resfields + " " + req.params.condition);
   var target = req.params.resfields;
   var condition = req.params.condition;
@@ -500,6 +545,7 @@ function insertRestaurantAPI(db,r,callback){
 
 
 
+
 app.get('/register',function(req,res) {
    res.render('register',{});
 });
@@ -516,7 +562,9 @@ app.post('/register',function(req,res) {
             db.close();
             console.log('Disconnected MongoDB\n');
             if(result)
-            res.redirect('/login');
+
+              res.redirect('/login');
+            
             else{
               res.status(500).send('username always exist');
               res.end();
@@ -536,24 +584,50 @@ app.get('/login',function(req,res) {
 });
 
 app.post('/login',function(req,res) {
-  console.log('login request incoming with: '+ req.url+ req.method);
+  //console.log('login request incoming with: '+ req.url+ req.method);
   var form = new formidable.IncomingForm();
   form.parse(req, function (err, fields, files) {
-    /**var user = {};
+    var user = {};
+    var record = {};
     user['username']  = fields.username;
     user['password']  = fields.password;
-    console.log(user);*/
-    console.log(fields.username);
-    console.log(fields.password);
-    res.writeHead(200, {'content-type': 'text/plain'});
-    res.write('received upload:\n\n');
-    res.end();
+    record['user'] = user;
+    MongoClient.connect(mongourl, function(err, db) {
+      assert.equal(err,null);
+     
+      userLogin(db,record,function(result) {
+          db.close();
+          
+          if(result != null){
+            console.log('login with ' + result.user.username);
+              req.session.username = result.user.username;
+              res.redirect('/');
+          }
+          
+          else{
+            res.status(500).send('wrong username or password');
+            res.end();
+          }
+          
+      });
+  });
   });
 });
 
+function userLogin(db,user,callback) {
+  console.log("Login");
+  db.collection('user').findOne(user,function(err,results){
+    assert.equal(err,null);
+    //console.log(JSON.stringify(results));
+    callback(results);
+
+  });
+
+}
+
 app.get('/logout',function(req,res) {
-    req.session = null;
-    res.redirect('/');
+  req.session.username = null;
+    res.redirect('/login');
 });
 
 

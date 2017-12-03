@@ -1,5 +1,5 @@
 <html>
-    <title>Search Result </title>
+    <title>Home </title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
     <body>
@@ -7,8 +7,8 @@
         function goBack() {window.history.back();}
       </script>
       
-          <div class="w3-container w3-teal">
-      <h1>Showing <%= r.length %> restaurant(s): </h1>
+      <div class="w3-container w3-teal">
+      <h1>Welcome <%=r.owner %>, Showing <%= r.length %> restaurant(s): </h1>
     </div>
     <form class="w3-container" action="/search" method="post">
         <input type="text" class="w3-input" name="value">
@@ -28,7 +28,12 @@
             <li><a href=/display?_id=<%= r[i]._id %>><%= r[i].name %></a></li>
           <% } %>
         </ol>
-         <button class="w3-btn" onclick="goBack()">Go Back</button>
+        <a href="/new" style="text-decoration: none">
+          <button class="w3-btn w3-section w3-teal w3-ripple">Create Restaurant</button>
+        </a>
+        <a href="/logout">
+         <button class="w3-btn">Logout</button>
+         </a>
       </div>
     </body>
     </html>
