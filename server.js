@@ -46,7 +46,7 @@ app.get('/',function(req,res){
       restaurant['owner'] = req.session.username;
      // console.log(JSON.stringify(restaurant));
 
-      res.render("home",{r:restaurant});
+        res.render("home",{r:restaurant});
     });
   });
      
@@ -59,7 +59,7 @@ app.get('/new',function(req,res){
   res.redirect('login');
   console.log("a new request:")
   res.render('new',{});
-  return;
+  
 });
 
 
@@ -509,7 +509,7 @@ app.get('/api/restaurant/read/:resfields/:condition',function(req,res){
   });
 });
 
-app.get('/api/restaurant/create',function(req,res){
+app.post('/api/restaurant/create',function(req,res){
   console.log("a new request insert:");
   response = {};
       
@@ -683,7 +683,6 @@ Login
  
 app.get('/login',function(req,res) {
    res.render("login",{});
-   return;
 });
 
 app.post('/login',function(req,res) {
